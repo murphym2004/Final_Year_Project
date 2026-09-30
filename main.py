@@ -21,8 +21,7 @@ while True:
 
     results = model(frame, classes=[0])
 
-    annotated_frame = results[0].plot()
-    cv2.imshow("Annotated Frame", annotated_frame)
+    annotated_frame = results[0].plot(labels=False)
 
     for info in results:
         parameters = info.boxes
@@ -34,6 +33,14 @@ while True:
             class_detect = int(class_detect)
             class_detect = classNames[class_detect]
             confidence = math.ceil(cofidence * 100)
+
+            height= y2 - y1
+            width = x2 - x1
+            threshold = height - width
+
+            if confidence > threshold:
+                cvzone.cornerRect(annotated_frame, (x1, y1, x2 - x1, y2 - y1), l=9, t=5, rt=1, colorR=(255, 0, 255))
+            cvzone.putTextRect(annotated_frame, f'{class_detect} {confidence}%', (max(0, x1), max(35, y1)), scale=0.8, thickness=1, offset=3)
 
     cv2.imshow("Annotated Frame", annotated_frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
