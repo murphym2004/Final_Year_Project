@@ -13,3 +13,5 @@ cvzone
 
 # Run:
 # .\.venv-store\Scripts\python.exe main.py
+# Run Linux:
+.venv-store/bin/python main.py
