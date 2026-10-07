@@ -3,9 +3,13 @@ cvzone
 
 # Create an environment:
 # py -3.14 -m venv .venv-store
+# Create an environment linux:
+# python3 -m venv .venv-store
 
 # Install dependencies:
 # .\.venv-store\Scripts\python.exe -m pip install -r requirements.txt
+# Install dependencies Linux:
+# .venv-store/bin/python -m pip install -r requirements.txt
 
 # Run:
 # .\.venv-store\Scripts\python.exe main.py
