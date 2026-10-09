@@ -1,0 +1,6 @@
+-Wno-frame-address
+-mlongcalls
+-fno-builtin-memcpy
+-fno-builtin-memset
+-fno-builtin-bzero
+"-specs=C:/Users/murph/OneDrive/Desktop/git/Final_Year_Project/esp32/build/specs/picolibc.specs"
