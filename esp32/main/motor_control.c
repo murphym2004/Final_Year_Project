@@ -1,3 +1,4 @@
+#include "hcsr04.h"
 #include <stdio.h>//for printf function
 
 #include "freertos/FreeRTOS.h"//makes main a task 
@@ -139,58 +140,26 @@ static void both_stop(void)//function to stop both motors
 
 void app_main(void)
 {
-    ESP_LOGI(TAG, "Starting motor test");
-
-    motor_gpio_init();
-
-    vTaskDelay(pdMS_TO_TICKS(1000));//wait for 1 second before starting the motor test
-
-    // Motor 1 forward
-    motor1_forward();
-    vTaskDelay(pdMS_TO_TICKS(2000));
-
-    motor1_stop();
-    vTaskDelay(pdMS_TO_TICKS(1000));
-
-    // Motor 1 reverse
-    motor1_reverse();
-    vTaskDelay(pdMS_TO_TICKS(2000));
-
-    motor1_stop();
-    vTaskDelay(pdMS_TO_TICKS(1000));
-
-    // Motor 2 forward
-    motor2_forward();
-    vTaskDelay(pdMS_TO_TICKS(2000));
-
-    motor2_stop();
-    vTaskDelay(pdMS_TO_TICKS(1000));
-
-    // Motor 2 reverse
-    motor2_reverse();
-    vTaskDelay(pdMS_TO_TICKS(2000));
-
-    motor2_stop();
-    vTaskDelay(pdMS_TO_TICKS(1000));
-
-    // Both forward
-    both_forward();
-    vTaskDelay(pdMS_TO_TICKS(2000));
-
-    both_stop();
-    vTaskDelay(pdMS_TO_TICKS(1000));
-
-    // Both reverse
-    both_reverse();
-    vTaskDelay(pdMS_TO_TICKS(2000));
-
-    both_stop();//stop both motors
-    vTaskDelay(pdMS_TO_TICKS(1000));
-
-    ESP_LOGI(TAG, "Motor test complete");
+    motor_gpio_init();//initialize the GPIO pins for motor control
+    hcsr04_init();//initialize the HCSR04 ultrasonic sensor
 
     while (1)//infinite loop to keep the program running 
     {
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        float distance_cm;
+        esp_err_t err = hcsr04_read_cm(&distance_cm);
+        if (err == ESP_OK) {
+            ESP_LOGI(TAG, "Distance: %.1f cm", distance_cm);
+        } else {
+            ESP_LOGW(TAG, "Distance reading failed: %s", esp_err_to_name(err));
+        }
+        vTaskDelay(pdMS_TO_TICKS(100));
+
+
+        if (distance_cm < 20.0) {
+            both_stop();
+            ESP_LOGI(TAG, "Obstacle detected! Stopping motors.");
+        } else {
+            both_forward();
+        }
     }
 }
