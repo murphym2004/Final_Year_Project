@@ -90,6 +90,7 @@ static void motor2_forward(void)//function to set motor 2 to move forward
 
 static void motor2_reverse(void)//function to set motor 2 to move in reverse
 {
+    gpio_set_level(MOTOR1_ENABLE, 0);//stop motor 1 before reversing motor 2
     gpio_set_level(MOTOR2_DIR, 1);
     gpio_set_level(MOTOR2_ENABLE, 1);
 
