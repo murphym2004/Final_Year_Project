@@ -54,8 +54,8 @@ static void motor1_forward(void)//function to set motor 1 to move forward
 {
     gpio_set_level(MOTOR1_DIR, 0);
     gpio_set_level(MOTOR1_ENABLE, 1);
-gpio_set_level(MOTOR2_ENABLE, 0); // Ensure motor 2 is stopped when motor 1 is moving forward
-gpio_set_level(MOTOR2_DIR, 0); // Set motor 2 direction to forward (optional, based on your logic)
+    gpio_set_level(MOTOR2_ENABLE, 0); // Ensure motor 2 is stopped when motor 1 is moving forward
+    gpio_set_level(MOTOR2_DIR, 0); // Set motor 2 direction to forward (optional, based on your logic)
     ESP_LOGI(TAG, "Motor 1 forward");
 }
 
@@ -156,7 +156,26 @@ void app_main(void)
         } else {
             ESP_LOGW(TAG, "Distance reading failed: %s", esp_err_to_name(err));
         }
+
         vTaskDelay(pdMS_TO_TICKS(100));
+
+        float left_distance_cm;
+        esp_err_t left_err = hcsr04_read_left_cm(&left_distance_cm);
+        if (left_err == ESP_OK) {
+            ESP_LOGI(TAG, "Left Distance: %.1f cm", left_distance_cm);
+        } else {
+            ESP_LOGW(TAG, "Left Distance reading failed: %s", esp_err_to_name(left_err));
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(100));
+
+        float right_distance_cm;
+        esp_err_t right_err = hcsr04_read_right_cm(&right_distance_cm);
+        if (right_err == ESP_OK) {
+            ESP_LOGI(TAG, "Right Distance: %.1f cm", right_distance_cm);
+        } else {
+            ESP_LOGW(TAG, "Right Distance reading failed: %s", esp_err_to_name(right_err));
+        }
 
         // front obstacle detection logic (commented out for now)
         // if (distance_cm < 20.0) {
@@ -173,13 +192,13 @@ void app_main(void)
         //  } else {
         //     both_forward();
         // }
-
+    
         // if sensor detects left obstacle, turn left
-        if (distance_cm < 20.0) {            
-            motor2_reverse();
-            ESP_LOGI(TAG, "Obstacle detected! Stopping motors.");
-         } else {
-            both_forward();
-        }
+        // if (distance_cm < 20.0) {            
+        //     motor2_reverse();
+        //     ESP_LOGI(TAG, "Obstacle detected! Stopping motors.");
+        //  } else {
+        //     both_forward();
+        // }
     }
 }
