@@ -177,6 +177,18 @@ void app_main(void)
             ESP_LOGW(TAG, "Right Distance reading failed: %s", esp_err_to_name(right_err));
         }
 
+        if(left_distance_cm < 20.0) {
+            motor1_reverse();
+            ESP_LOGI(TAG, "Left obstacle detected! Reversing motor 1.");
+        } else if(right_distance_cm < 20.0) {
+            motor2_reverse();
+            ESP_LOGI(TAG, "Right obstacle detected! Reversing motor 2.");
+        } else if(distance_cm < 20.0) {
+            both_stop();
+            ESP_LOGI(TAG, "Front obstacle detected! Stopping both motors.");
+        } else {
+            both_forward();
+        }
         // front obstacle detection logic (commented out for now)
         // if (distance_cm < 20.0) {
         //     both_stop();           
