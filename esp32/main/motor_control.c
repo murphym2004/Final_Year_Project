@@ -54,7 +54,8 @@ static void motor1_forward(void)//function to set motor 1 to move forward
 {
     gpio_set_level(MOTOR1_DIR, 0);
     gpio_set_level(MOTOR1_ENABLE, 1);
-
+gpio_set_level(MOTOR2_ENABLE, 0); // Ensure motor 2 is stopped when motor 1 is moving forward
+gpio_set_level(MOTOR2_DIR, 0); // Set motor 2 direction to forward (optional, based on your logic)
     ESP_LOGI(TAG, "Motor 1 forward");
 }
 
@@ -62,7 +63,8 @@ static void motor1_reverse(void)//function to set motor 1 to move in reverse
 {
     gpio_set_level(MOTOR1_DIR, 1);
     gpio_set_level(MOTOR1_ENABLE, 1);
-
+    gpio_set_level(MOTOR2_ENABLE, 0); // Ensure motor 2 is stopped when motor 1 is moving in reverse
+gpio_set_level(MOTOR2_DIR, 1); // Set motor 2 direction to reverse (optional, based on your logic)
     ESP_LOGI(TAG, "Motor 1 reverse");
 }
 
@@ -81,12 +83,14 @@ static void motor2_forward(void)//function to set motor 2 to move forward
 {
     gpio_set_level(MOTOR2_DIR, 0);
     gpio_set_level(MOTOR2_ENABLE, 1);
-
+    gpio_set_level(MOTOR1_ENABLE, 0); // Ensure motor 1 is stopped when motor 2 is moving forward
+    gpio_set_level(MOTOR1_DIR, 0); // Set motor 1 direction to
     ESP_LOGI(TAG, "Motor 2 forward");
 }
 
 static void motor2_reverse(void)//function to set motor 2 to move in reverse
 {
+    gpio_set_level(MOTOR1_ENABLE, 0);//stop motor 1 before reversing motor 2
     gpio_set_level(MOTOR2_DIR, 1);
     gpio_set_level(MOTOR2_ENABLE, 1);
 
@@ -154,11 +158,27 @@ void app_main(void)
         }
         vTaskDelay(pdMS_TO_TICKS(100));
 
+        // front obstacle detection logic (commented out for now)
+        // if (distance_cm < 20.0) {
+        //     both_stop();           
+        //     ESP_LOGI(TAG, "Obstacle detected! Stopping motors.");
+        // } else {
+        //     both_forward();
+        // }
 
-        if (distance_cm < 20.0) {
-            both_stop();
+        // if sensor detects right obstacle, turn left
+        // if (distance_cm < 20.0) {
+        //     motor1_reverse();
+        //      ESP_LOGI(TAG, "Obstacle detected! Stopping motors.");
+        //  } else {
+        //     both_forward();
+        // }
+
+        // if sensor detects left obstacle, turn left
+        if (distance_cm < 20.0) {            
+            motor2_reverse();
             ESP_LOGI(TAG, "Obstacle detected! Stopping motors.");
-        } else {
+         } else {
             both_forward();
         }
     }
