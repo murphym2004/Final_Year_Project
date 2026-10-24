@@ -11,3 +11,7 @@ void motor_gpio_init(void);
 void motor1_forward(void);
 void motor1_reverse(void);
 void motor1_stop(void);
+
+void motor2_forward(void);
+void motor2_reverse(void);
+void motor2_stop(void);

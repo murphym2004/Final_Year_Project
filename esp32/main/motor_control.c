@@ -12,35 +12,6 @@
 static const char *TAG = "MOTOR_TEST";//for logging information about the motor test
 
 // -----------------------------
-// MOTOR 2
-// -----------------------------
-
-static void motor2_forward(void)//function to set motor 2 to move forward
-{
-    gpio_set_level(MOTOR2_DIR, 0);
-    gpio_set_level(MOTOR2_ENABLE, 1);
-    gpio_set_level(MOTOR1_ENABLE, 0); // Ensure motor 1 is stopped when motor 2 is moving forward
-    gpio_set_level(MOTOR1_DIR, 0); // Set motor 1 direction to
-    ESP_LOGI(TAG, "Motor 2 forward");
-}
-
-static void motor2_reverse(void)//function to set motor 2 to move in reverse
-{
-    gpio_set_level(MOTOR1_ENABLE, 0);//stop motor 1 before reversing motor 2
-    gpio_set_level(MOTOR2_DIR, 1);
-    gpio_set_level(MOTOR2_ENABLE, 1);
-
-    ESP_LOGI(TAG, "Motor 2 reverse");
-}
-
-static void motor2_stop(void)//function to stop motor 2
-{
-    gpio_set_level(MOTOR2_ENABLE, 0);
-
-    ESP_LOGI(TAG, "Motor 2 stop");
-}
-
-// -----------------------------
 // BOTH MOTORS
 // -----------------------------
 
