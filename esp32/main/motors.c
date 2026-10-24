@@ -84,3 +84,37 @@ void motor2_stop(void)//function to stop motor 2
     ESP_LOGI(TAG, "Motor 2 stop");
 }
 
+// -----------------------------
+// BOTH MOTORS
+// -----------------------------
+
+void both_forward(void)//function to set both motors to move forward
+{
+    gpio_set_level(MOTOR1_DIR, 0);
+    gpio_set_level(MOTOR2_DIR, 0);
+
+    gpio_set_level(MOTOR1_ENABLE, 1);
+    gpio_set_level(MOTOR2_ENABLE, 1);
+
+    ESP_LOGI(TAG, "Both motors forward");
+}
+
+void both_reverse(void)//function to set both motors to move in reverse
+{
+    gpio_set_level(MOTOR1_DIR, 1);
+    gpio_set_level(MOTOR2_DIR, 1);
+
+    gpio_set_level(MOTOR1_ENABLE, 1);
+    gpio_set_level(MOTOR2_ENABLE, 1);
+
+    ESP_LOGI(TAG, "Both motors reverse");
+}
+
+void both_stop(void)//function to stop both motors
+{
+    gpio_set_level(MOTOR1_ENABLE, 0);
+    gpio_set_level(MOTOR2_ENABLE, 0);
+
+    ESP_LOGI(TAG, "Both motors stop");
+}
+

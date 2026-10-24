@@ -15,3 +15,7 @@ void motor1_stop(void);
 void motor2_forward(void);
 void motor2_reverse(void);
 void motor2_stop(void);
+
+void both_forward(void);
+void both_reverse(void);
+void both_stop(void);
