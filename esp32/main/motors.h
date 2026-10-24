@@ -7,3 +7,7 @@
 #define MOTOR2_DIR    14//for setting direction of motor 2
 
 void motor_gpio_init(void);
+
+void motor1_forward(void);
+void motor1_reverse(void);
+void motor1_stop(void);

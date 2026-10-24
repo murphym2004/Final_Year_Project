@@ -1,5 +1,8 @@
 #include "motors.h"
 #include "driver/gpio.h"
+#include "esp_log.h"
+
+static const char *TAG = "MOTOR_TEST";//for logging information about the motor test
 
 void motor_gpio_init(void)//function to initialize the GPIO pins for motor control
 {
@@ -21,5 +24,34 @@ void motor_gpio_init(void)//function to initialize the GPIO pins for motor contr
     // Start with motors stopped
     gpio_set_level(MOTOR1_ENABLE, 0);//set motor 1 enable pin to low (stop motor 1)
     gpio_set_level(MOTOR2_ENABLE, 0);//set motor 2 enable pin to low (stop motor 2)
+}
+
+// -----------------------------
+// MOTOR 1
+// -----------------------------
+
+void motor1_forward(void)//function to set motor 1 to move forward
+{
+    gpio_set_level(MOTOR1_DIR, 0);
+    gpio_set_level(MOTOR1_ENABLE, 1);
+    gpio_set_level(MOTOR2_ENABLE, 0); // Ensure motor 2 is stopped when motor 1 is moving forward
+    gpio_set_level(MOTOR2_DIR, 0); // Set motor 2 direction to forward (optional, based on your logic)
+    ESP_LOGI(TAG, "Motor 1 forward");
+}
+
+void motor1_reverse(void)//function to set motor 1 to move in reverse
+{
+    gpio_set_level(MOTOR1_DIR, 1);
+    gpio_set_level(MOTOR1_ENABLE, 1);
+    gpio_set_level(MOTOR2_ENABLE, 0); // Ensure motor 2 is stopped when motor 1 is moving in reverse
+gpio_set_level(MOTOR2_DIR, 1); // Set motor 2 direction to reverse (optional, based on your logic)
+    ESP_LOGI(TAG, "Motor 1 reverse");
+}
+
+void motor1_stop(void)//function to stop motor 1
+{
+    gpio_set_level(MOTOR1_ENABLE, 0);
+
+    ESP_LOGI(TAG, "Motor 1 stop");
 }
 
