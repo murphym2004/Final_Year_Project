@@ -12,7 +12,7 @@
 #define rightTRIG_PIN GPIO_NUM_4 //right is purple wire
 #define rightECHO_PIN GPIO_NUM_16
 
-#define TIMEOUT_US 30000
+    #define TIMEOUT_US 30000
 static bool initialized;
 
 esp_err_t hcsr04_init(void)
