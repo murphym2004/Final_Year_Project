@@ -1,80 +1,115 @@
 #include "hcsr04.h"
 #include "motors.h"
-#include <stdio.h>//for printf function
+#include "esp_log.h"
+#include "esp_timer.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include <stdbool.h>
 
-#include "freertos/FreeRTOS.h"//makes main a task 
-#include "freertos/task.h"//makes main a task
+static const char *TAG = "ROBOT";
 
-#include "driver/gpio.h"//for gpio functions
+#define FRONT_STOP_CM 35.0f
+#define FRONT_CLEAR_CM 45.0f
+#define SIDE_STOP_CM 40.0f
+#define SIDE_CLEAR_CM 48.0f
+#define SENSOR_MAX_AGE_US 1000000LL
+#define MIN_STEERING_US 500000LL
 
-#include "esp_log.h"//for logging information
-
-static const char *TAG = "MOTOR_TEST";//for logging information about the motor test
- 
-// -----------------------------
-// MAIN
-// -----------------------------
+enum { FRONT, LEFT, RIGHT };
+enum { STRAIGHT, STEER_LEFT, STEER_RIGHT };
 
 void app_main(void)
 {
-    motor_gpio_init();//initialize the GPIO pins for motor control
-    hcsr04_init();//initialize the HCSR04 ultrasonic sensor
+    motor_gpio_init();
+    ESP_ERROR_CHECK(hcsr04_init());
 
-    while (1)//infinite loop to keep the program running 
-    {
-        float distance_cm;
-        esp_err_t err = hcsr04_read_cm(&distance_cm);
-        if (err == ESP_OK) {
-            ESP_LOGI(TAG, " front Distance: %.1f cm", distance_cm);
+    // Each sensor keeps its last good distance and measurement time.
+    float distance[3] = {0};
+    int64_t last_good[3] = {0};
+    const char *sensor_name[3] = {"Front", "Left", "Right"};
+    int sensor = FRONT;
+    int steering = STRAIGHT;
+    bool front_escape = false;
+    int64_t turn_started = 0;
+
+    while (1) {
+        // Read one sensor, then make a movement decision immediately.
+        float reading = 0;
+        esp_err_t error;
+        if (sensor == FRONT) error = hcsr04_read_cm(&reading);
+        else if (sensor == LEFT) error = hcsr04_read_left_cm(&reading);
+        else error = hcsr04_read_right_cm(&reading);
+
+        int64_t now = esp_timer_get_time();
+        if (error == ESP_OK) {
+            distance[sensor] = reading;
+            last_good[sensor] = now;
+            ESP_LOGI(TAG, "%s: %.1f cm", sensor_name[sensor], reading);
         } else {
-            ESP_LOGW(TAG, " front Distance reading failed: %s", esp_err_to_name(err));
+            ESP_LOGW(TAG, "%s: %s", sensor_name[sensor], esp_err_to_name(error));
         }
+        sensor = (sensor + 1) % 3;
 
-        vTaskDelay(pdMS_TO_TICKS(100));
+        // Brief failures reuse the last good reading; old readings stop us.
+        if (last_good[FRONT] == 0 || last_good[LEFT] == 0 || last_good[RIGHT] == 0 ||
+            now - last_good[FRONT] > SENSOR_MAX_AGE_US ||
+            now - last_good[LEFT] > SENSOR_MAX_AGE_US ||
+            now - last_good[RIGHT] > SENSOR_MAX_AGE_US) {
+            both_stop();
+            ESP_LOGW(TAG, "Stopped: waiting for recent sensor readings");
+        } else if (distance[FRONT] < FRONT_STOP_CM) {
+            // Front obstacle: back away, then pivot toward the clearer side.
+            steering = distance[LEFT] >= distance[RIGHT] ? STEER_LEFT : STEER_RIGHT;
+            front_escape = true;
+            ESP_LOGI(TAG, "Front escape: pivot %s",
+                     steering == STEER_LEFT ? "left" : "right");
+            both_stop();
+            vTaskDelay(pdMS_TO_TICKS(50));
+            both_reverse();
+            vTaskDelay(pdMS_TO_TICKS(500));
+            both_stop();
+            vTaskDelay(pdMS_TO_TICKS(50));
+            if (steering == STEER_LEFT) turn_left();
+            else turn_right();
+            vTaskDelay(pdMS_TO_TICKS(600));
+            both_stop();
 
-        float left_distance_cm;
-        esp_err_t left_err = hcsr04_read_left_cm(&left_distance_cm);
-        if (left_err == ESP_OK) {
-            ESP_LOGI(TAG, "Left Distance: %.1f cm", left_distance_cm);
+            // The robot has moved: collect new readings before driving.
+            last_good[FRONT] = last_good[LEFT] = last_good[RIGHT] = 0;
+            sensor = FRONT;
         } else {
-            ESP_LOGW(TAG, "Left Distance reading failed: %s", esp_err_to_name(left_err));
-        }
+            // Finish a turn only when there is enough clearance.
+            if (steering != STRAIGHT) {
+                int wall_side = steering == STEER_LEFT ? RIGHT : LEFT;
+                bool ready = now - turn_started >= MIN_STEERING_US;
+                if (front_escape) ready = distance[FRONT] >= FRONT_CLEAR_CM;
+                if (distance[wall_side] >= SIDE_CLEAR_CM && ready) {
+                    steering = STRAIGHT;
+                    front_escape = false;
+                }
+            }
 
-        vTaskDelay(pdMS_TO_TICKS(100));
+            // Choose a new side-steering direction when travelling straight.
+            if (steering == STRAIGHT) {
+                if (distance[LEFT] < SIDE_STOP_CM && distance[RIGHT] < SIDE_STOP_CM)
+                    steering = distance[LEFT] >= distance[RIGHT] ? STEER_LEFT : STEER_RIGHT;
+                else if (distance[RIGHT] < SIDE_STOP_CM) steering = STEER_LEFT;
+                else if (distance[LEFT] < SIDE_STOP_CM) steering = STEER_RIGHT;
+                if (steering != STRAIGHT) turn_started = now;
+            }
 
-        float right_distance_cm;
-        esp_err_t right_err = hcsr04_read_right_cm(&right_distance_cm);
-        if (right_err == ESP_OK) {
-            ESP_LOGI(TAG, "Right Distance: %.1f cm", right_distance_cm);
-        } else {
-            ESP_LOGW(TAG, "Right Distance reading failed: %s", esp_err_to_name(right_err));
-        }
-
-
-      
-
-    //    // front obstacle detection logic 
-            if (distance_cm < 5.0) {
-                both_stop();           
-                ESP_LOGI(TAG, "Obstacle detected! Stopping motors.");
+            // Front escapes pivot; side avoidance curves forward.
+            if (steering == STEER_LEFT) {
+                if (front_escape) turn_left();
+                else steer_left();
+            } else if (steering == STEER_RIGHT) {
+                if (front_escape) turn_right();
+                else steer_right();
             } else {
                 both_forward();
             }
-
-    //     //if sensor detects right obstacle, turn left
-        if (right_distance_cm < 20.0) {
-            motor1_reverse();
-             ESP_LOGI(TAG, "Obstacle detected! Stopping motors.");
-         } else {
-            both_forward();
         }
-    
-    //     //if sensor detects left obstacle, turn left
-        if (left_distance_cm < 20.0) {            
-            motor2_reverse();
-            ESP_LOGI(TAG, "Obstacle detected! Stopping motors.");
-         } else {
-            both_forward();
-        }
+        // Keep ultrasonic triggers apart to reduce interference.
+        vTaskDelay(pdMS_TO_TICKS(60));
     }
 }
