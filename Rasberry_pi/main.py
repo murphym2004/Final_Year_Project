@@ -45,9 +45,23 @@ while True:
 
             person_centre_x = (x1 + x2) / 2
             frame_centre_x = frame.shape[1] / 2
+            left_zone = frame.shape[1] / 3
+            right_zone = (frame.shape[1] / 3) * 2
+
+
+            if person_centre_x < left_zone:
+                person_position = "LEFT"
+
+            elif person_centre_x > right_zone:
+                person_position = "RIGHT"
+
+            else:
+                person_position = "CENTRE"
+
 
             print("Person centre:", person_centre_x)
             print("Frame centre:", frame_centre_x)
+            print("Person position:", person_position)
 
             if height > 0:
                 aspect_ratio = width / height
