@@ -79,6 +79,12 @@ void app_main(void)
                 both_reverse();
                 uart_write_bytes(UART_PORT, "OK REVERSE\n", 11);
             }
+           else if (strstr((char *)data, "LEFT") != NULL)
+            {
+                steer_left();
+                uart_write_bytes(UART_PORT, "OK LEFT\n", 8);
+            }
+            
         }
     }
 }

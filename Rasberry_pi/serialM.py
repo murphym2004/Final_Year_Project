@@ -30,16 +30,9 @@ def send_command(command):
 
 
 send_command("PING")
-
 time.sleep(1)
 
-send_command("FORWARD")
-time.sleep(2)
-
-send_command("STOP")
-time.sleep(1)
-
-send_command("REVERSE")
+send_command("LEFT")
 time.sleep(2)
 
 send_command("STOP")
