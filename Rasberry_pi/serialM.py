@@ -35,6 +35,9 @@ time.sleep(1)
 send_command("LEFT")
 time.sleep(2)
 
+send_command("RIGHT")
+time.sleep(2)
+
 send_command("STOP")
 
 esp32.close()
