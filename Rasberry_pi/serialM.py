@@ -1,6 +1,7 @@
 import serial
 import time
 
+
 esp32 = serial.Serial(
     '/dev/ttyUSB0',
     115200,
@@ -33,6 +34,9 @@ send_command("PING")
 time.sleep(1)
 
 send_command("LEFT")
+time.sleep(2)
+
+send_command("RIGHT")
 time.sleep(2)
 
 send_command("STOP")

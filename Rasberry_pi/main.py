@@ -2,6 +2,7 @@ import cv2
 import cvzone
 import math
 import time
+import serial
 from ultralytics import YOLO
 from picamera2 import Picamera2
 
@@ -19,6 +20,28 @@ with open('classes.txt', 'r') as f:
 previous_center_y = None
 possible_fall = False
 fall_start_time = None
+
+esp32 = serial.Serial(
+    '/dev/ttyUSB0',
+    115200,
+    timeout=0.2
+)
+
+time.sleep(2)
+
+last_command = None
+
+def send_command(command):
+    global last_command
+
+    if command == last_command:
+        return
+
+    print("Sending command:", command)
+
+    esp32.write((command + '\n').encode())
+
+last_command = None
 
 while True:
     frame = cap.capture_array()
@@ -57,6 +80,17 @@ while True:
 
             else:
                 person_position = "CENTRE"
+
+
+
+            if person_position == "LEFT":
+                send_command("LEFT")
+
+            elif person_position == "RIGHT":
+                send_command("RIGHT")
+
+            elif person_position == "CENTRE":
+                send_command("FORWARD")
 
 
             print("Person centre:", person_centre_x)
@@ -135,4 +169,5 @@ while True:
 
 
 cap.stop()
+esp32.close()
 cv2.destroyAllWindows()

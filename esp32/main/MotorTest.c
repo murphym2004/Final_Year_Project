@@ -84,6 +84,15 @@ void app_main(void)
                 steer_left();
                 uart_write_bytes(UART_PORT, "OK LEFT\n", 8);
             }
+            else if (strstr((char *)data, "RIGHT") != NULL)
+            {
+                steer_right();
+                uart_write_bytes(UART_PORT, "OK RIGHT\n", 9);
+            }
+            else
+            {
+                uart_write_bytes(UART_PORT, "UNKNOWN COMMAND\n", 16);
+            }
             
         }
     }
