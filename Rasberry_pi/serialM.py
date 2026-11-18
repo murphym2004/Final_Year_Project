@@ -1,6 +1,7 @@
 import serial
 import time
 
+
 esp32 = serial.Serial(
     '/dev/ttyUSB0',
     115200,
