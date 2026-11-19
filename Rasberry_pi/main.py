@@ -38,10 +38,8 @@ def send_command(command):
         return
 
     print("Sending command:", command)
-
     esp32.write((command + '\n').encode())
-
-last_command = None
+    last_command = command
 
 while True:
     frame = cap.capture_array()
@@ -68,8 +66,9 @@ while True:
 
             person_centre_x = (x1 + x2) / 2
             frame_centre_x = frame.shape[1] / 2
-            left_zone = frame.shape[1] / 3
-            right_zone = (frame.shape[1] / 3) * 2
+            dead_zone = 60                                               //allows for a dead zone of 60 pixels around the center of the frame
+            left_zone = frame_centre_x - dead_zone
+            right_zone = frame_centre_x + dead_zone
 
 
             if person_centre_x < left_zone:
