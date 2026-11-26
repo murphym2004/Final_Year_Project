@@ -53,9 +53,12 @@ while True:
 
     annotated_frame = results[0].plot(labels=False)
 
-
+    person_detected = False
     for info in results:
         for box in info.boxes:
+
+            person_detected = True
+
             x1, y1, x2, y2 = box.xyxy[0]
             x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
 
@@ -66,7 +69,7 @@ while True:
 
             person_centre_x = (x1 + x2) / 2
             frame_centre_x = frame.shape[1] / 2
-            dead_zone = 60                                               //allows for a dead zone of 60 pixels around the center of the frame
+            dead_zone = 60                           # allows for a dead zone of 60 pixels around the centre                                        //allows for a dead zone of 60 pixels around the center of the frame
             left_zone = frame_centre_x - dead_zone
             right_zone = frame_centre_x + dead_zone
 
@@ -159,6 +162,9 @@ while True:
                     offset=3
                 )
 
+    if not person_detected:
+    print("Person lost - stopping robot")
+    send_command("STOP")
 
     cv2.imshow("YOLO Camera", annotated_frame)
 
